@@ -96,6 +96,29 @@ function selectManager() {
 }
 
 function addDepartment() {
+    inquirer.prompt([
+        {
+          name: "name",
+          type: "input",
+          message: "What Department would you like to add?"
+        }
+    ]).then(function(response) {
+        var query = connection.query(
+            "INSERT INTO department SET ? ",
+            {
+              name: response.name
+            
+            },
+            function(err) {
+                if (err) throw err
+                console.table(response);
+                init();
+            }
+        )
+    })
+}
+
+function addEmployees() {
   inquirer
     .prompt([
       {
@@ -142,38 +165,39 @@ function addDepartment() {
 }
 
 function addRoles() {
-    connection.query("SELECT role.title AS Title, role.salary AS Salary FROM role",   function(err, res) {
-        inquirer.prompt([
+  connection.query(
+    "SELECT role.title AS Title, role.salary AS Salary FROM role",
+    function (err, res) {
+      inquirer
+        .prompt([
+          {
+            name: "Title",
+            type: "input",
+            message: "What is the roles Title?",
+          },
+          {
+            name: "Salary",
+            type: "input",
+            message: "What is the Salary?",
+          },
+        ])
+        .then(function (res) {
+          connection.query(
+            "INSERT INTO role SET ?",
             {
-              name: "Title",
-              type: "input",
-              message: "What is the roles Title?"
+              title: res.Title,
+              salary: res.Salary,
             },
-            {
-              name: "Salary",
-              type: "input",
-              message: "What is the Salary?"
-    
-            } 
-        ]).then(function(res) {
-            connection.query(
-                "INSERT INTO role SET ?",
-                {
-                  title: res.Title,
-                  salary: res.Salary,
-                },
-                function(err) {
-                    if (err) throw err
-                    console.table(res);
-                    startPrompt();
-                }
-            )
-    
+            function (err) {
+              if (err) throw err;
+              console.table(res);
+              init();
+            }
+          );
         });
-      });
+    }
+  );
 }
-
-function addEmployees() {}
 
 function viewDepartment() {}
 

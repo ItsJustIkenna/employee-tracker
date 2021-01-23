@@ -3,6 +3,7 @@ const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 const util = require("util");
+const { title } = require("process");
 
 const app = express();
 
@@ -34,7 +35,7 @@ function init() {
         choices: [
           "View All Employees?",
           "View All Employee's By Roles?",
-          "View all Employees By Departments?",
+          "View all Departments?",
           "Update Employee?",
           "Add Employee?",
           "Add Role?",
@@ -51,7 +52,7 @@ function init() {
         case "View All Employee's By Roles?":
           viewAllRoles();
           break;
-        case "View all Employees By Departments?":
+        case "View all Departments?":
           viewAllDepartments();
           break;
 
@@ -85,10 +86,10 @@ async function selectRole() {
 }
 
 async function selectManager() {
-  const managerQuery = `SELECT first_name, last_name, manager_id FROM employee WHERE manager_id IS NOT NULL;`;
+  const managerQuery = `SELECT first_name, last_name FROM employees;`;
   const query = await connection.query(managerQuery);
   const newArray = query.map((data) => {
-    return data.title;
+    return data.first_name + " " + data.last_name;
   });
   return newArray;
 }
@@ -131,16 +132,16 @@ function addEmployees() {
         message: "Enter their last name",
       },
       {
-        type: "input",
+        type: "list",
         name: "role",
         message: "Enter their role",
-        choices: selectRole(),
+        choices: selectRole,
       },
       {
         type: "list",
         name: "manager list",
         message: "Enter their manager's name",
-        choices: selectManager(),
+        choices: selectManager,
       },
     ])
     .then((response) => {
@@ -164,52 +165,53 @@ function addEmployees() {
 }
 
 function addRoles() {
-  connection.query(
-    "SELECT role.title AS Title, role.salary AS Salary FROM role",
-    function (err, res) {
-      inquirer
-        .prompt([
-          {
-            name: "Title",
-            type: "list",
-            message: "What is the roles Title?",
-            choices: selectRole(),
-          },
-          {
-            name: "Salary",
-            type: "input",
-            message: "What is the Salary?",
-          },
-        ])
-        .then(function (response) {
-          console.log(response);
-          connection.query(
-            "INSERT INTO role SET ?",
-            {
-              title: response.Title,
-              salary: response.Salary,
-            },
-            function (err) {
-              if (err) throw err;
-              console.table(response);
-              init();
-            }
-          );
-        });
-    }
-  );
+  connection.query("SELECT * FROM department", function (err, data) {
+    let deptArr = data.map((department) => {
+      return {
+        name: department.name,
+        value: department.id,
+      };
+    });
+    inquirer
+      .prompt([
+        {
+          name: "Title",
+          type: "input",
+          message: "What is the roles Title?",
+        },
+        {
+          name: "Salary",
+          type: "input",
+          message: "What is the Salary?",
+        },
+        {
+          type: "list",
+          name: "department",
+          message: "Please select a department",
+          choices: deptArr,
+        },
+      ])
+      .then(function (response) {
+        console.log(response);
+        connection.query(
+          "INSERT INTO role (title, salary, department_id) Value (?, ?, ?)",
+          [response.Title, response.Salary, response.department],
+          function (err) {
+            if (err) throw err;
+            console.log("Your role has been added.");
+            init();
+          }
+        );
+      });
+  });
 }
 
 function viewAllDepartments() {
-  console.log("hello");
-  connection.query(
-    "SELECT employee.first_name, employee.last_name, department.name AS Department FROM employee JOIN role ON employee.role_id = role.id JOIN department ON role.department_id = department.id ORDER BY employee.id;",
-    function (err, res) {
-      if (err) throw err;
-      console.table(res);
-      init();
-    }
-  );
+  connection.query("SELECT * FROM department", function (err, res) {
+    if (err) throw err;
+    console.table(res);
+    init();
+  });
 }
 
 function viewAllRoles() {

@@ -34,7 +34,7 @@ function init() {
         name: "choice",
         choices: [
           "View All Employees?",
-          "View All Employee's By Roles?",
+          "View All Roles!",
           "View all Departments?",
           "Update Employee?",
           "Add Employee?",
@@ -49,7 +49,7 @@ function init() {
           viewAllEmployees();
           break;
 
-        case "View All Employee's By Roles?":
+        case "View All Roles!":
           viewAllRoles();
           break;
         case "View all Departments?":
@@ -85,12 +85,18 @@ async function selectRole() {
   return newArray;
 }
 
-async function selectManager() {
-  const managerQuery = `SELECT first_name, last_name FROM employees;`;
+async function selectManager2() {
+  const managerQuery = `SELECT * FROM employee;`;
   const query = await connection.query(managerQuery);
   const newArray = query.map((data) => {
-    return data.first_name + " " + data.last_name;
+    console.log(data);
+    const dataObject = {
+      name: data.first_name + " " + data.last_name,
+      value: data.ID,
+    };
+    return dataObject;
   });
+  console.log(newArray);
   return newArray;
 }
 
@@ -123,12 +129,12 @@ function addEmployees() {
     .prompt([
       {
         type: "input",
-        name: "first name",
+        name: "firstName",
         message: "Enter their first name",
       },
       {
         type: "input",
-        name: "last name",
+        name: "lastName",
         message: "Enter their last name",
       },
       {
@@ -139,22 +145,22 @@ function addEmployees() {
       },
       {
         type: "list",
-        name: "manager list",
+        name: "manager",
         message: "Enter their manager's name",
-        choices: selectManager,
+        choices: selectManager2,
       },
     ])
     .then((response) => {
-      const roleId = selectRole().indexOf(response.role) + 1;
-      const managerId = selectManager().indexOf(response.choice) + 1;
+      console.log(response);
+
       connection.query(
-        "INSERT INTO employee SET ?",
-        {
-          first_name: response.first_name,
-          last_name: response.last_name,
-          managerId: managerId,
-          role_id: roleId,
-        },
+        "INSERT INTO employee (first_name, last_name, role_id, manager_id) values (?, ?, ?, ?)",
+        [
+          response.firstName,
+          response.lastName,
+          response.manager,
+          response.role,
+        ],
         function (err) {
           if (err) throw err;
           console.table(response);
@@ -216,7 +222,7 @@ function viewAllDepartments() {
 
 function viewAllRoles() {
   connection.query(
-    "SELECT employee.first_name, employee.last_name, role.title AS Title FROM employee JOIN role ON employee.role_id = role.id;",
+    "SELECT id, title, salary FROM role",
     function (err, res) {
       if (err) throw err;
       console.table(res);

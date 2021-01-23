@@ -18,13 +18,22 @@ PRIMARY KEY(id)
 );
 
 CREATE TABLE employee (
-ID INT NOT NULL AUTO_INCREMENT,
+id INT NOT NULL AUTO_INCREMENT,
 first_name VARCHAR(30) NULL,
 last_name VARCHAR(30) NULL,
 role_id  INT NULL,
 manager_id INT NULL,
 PRIMARY KEY(id)
 );
+
+INSERT INTO department (name)
+VALUE ("Sales");
+INSERT INTO department (name)
+VALUE ("Engineering");
+INSERT INTO department (name)
+VALUE ("Finance");
+INSERT INTO department (name)
+VALUE ("Legal");
 
 INSERT INTO role (title, salary, department_id)
 VALUE ("Lead Engineer", 150000, 2);
